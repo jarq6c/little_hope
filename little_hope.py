@@ -4,10 +4,6 @@ from evaluation_tools.nwis_client.iv import IVDataService
 from evaluation_tools.events.event_detection import decomposition as ev
 import matplotlib.pyplot as plt
 
-# TODO add this to event analysis
-def peak_event_value(start, end, timeseries):
-    return timeseries.loc[start:end].max()
-
 # Retrieve streamflow observations for Little Hope Creek
 observations = IVDataService.get(
     sites='02146470', 
@@ -35,8 +31,7 @@ events = ev.list_events(
 
 # Compute peak discharge for each event
 events['peak'] = events.apply(
-    lambda e: peak_event_value(e.start, e.end, 
-        observations['value']), 
+    lambda e: observations['value'].loc[e.start:e.end].max(), 
     axis=1
     )
 
