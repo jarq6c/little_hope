@@ -1,4 +1,4 @@
-# Little Hope Creek Peak Flow Analysis
+# Little Hope Creek :: Peak Flow Analysis
 
 This workflow demonstrates an application of event detection to generate a distribution of peak discharges from [Little Hope Creek](https://waterdata.usgs.gov/nc/nwis/inventory/?site_no=02146470&agency_cd=USGS) in North Carolina.
 
@@ -37,7 +37,6 @@ $ make clean
 # Import tools to retrieve data and detect events
 from evaluation_tools.nwis_client.iv import IVDataService
 from evaluation_tools.events.event_detection import decomposition as ev
-from pandas.tseries.frequencies import to_offset
 import matplotlib.pyplot as plt
 
 # TODO add this to event analysis
@@ -65,14 +64,9 @@ observations = observations.resample('H').first().ffill()
 events = ev.list_events(
     observations['value'],
     halflife='6H', 
-    window='7D'
+    window='7D',
+    minimum_event_duration='6H'
 )
-
-# Compute event durations
-events['duration'] = events['end'].sub(events['start'])
-
-# TODO Filter out noise (port this to main code)
-events = events[events['duration'] >= to_offset('6H')]
 
 # Compute peak discharge for each event
 events['peak'] = events.apply(
