@@ -2,7 +2,6 @@
 # Import tools to retrieve data and detect events
 from evaluation_tools.nwis_client.iv import IVDataService
 from evaluation_tools.events.event_detection import decomposition as ev
-from pandas.tseries.frequencies import to_offset
 import matplotlib.pyplot as plt
 
 # TODO add this to event analysis
