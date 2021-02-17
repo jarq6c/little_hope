@@ -30,14 +30,9 @@ observations = observations.resample('H').first().ffill()
 events = ev.list_events(
     observations['value'],
     halflife='6H', 
-    window='7D'
+    window='7D',
+    minimum_event_duration='6H'
 )
-
-# Compute event durations
-events['duration'] = events['end'].sub(events['start'])
-
-# TODO Filter out noise (port this to main code)
-events = events[events['duration'] >= to_offset('6H')]
 
 # Compute peak discharge for each event
 events['peak'] = events.apply(
