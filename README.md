@@ -13,19 +13,19 @@ The included `Makefile` will build the python environment and run the `little_ho
 To execute the workflow:
 
 ```console
-# Clone this repository
+# Clone this repository ...
 $ git clone https://github.com/jarq6c/little_hope.git
-
-# Switch to the repository's directory
 $ cd little_hope
+
+# ... or download this repository
+$ wget https://github.com/jarq6c/little_hope/archive/main.zip
+$ unzip main.zip
+$ cd little_hope-main
 
 # Run make
 $ make
-```
 
-To clean-up and start over:
-
-```console
+# To clean-up and start over
 $ make clean
 ```
 
