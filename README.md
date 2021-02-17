@@ -8,7 +8,7 @@ This workflow requires python 3.8, make, and assumes a Linux environment.
 
 ## Build and execute
 
-The included `Makefile` will build the python environment and run the `little_hope.py` script. This script retrieves one year of streamflow data for Little Hope Creak and caches it in a local sqlite database. The script cleans and resamples the data before applying event detection. This workflow applies event detection using time series decomposition as found in the [Evaluation Tools](https://github.com/NOAA-OWP/evaluation_tools) package. For each event, the script computes peak discharge error. The final output are two PNG files: a histogram of peak discharges and a streamflow hydrograph depicting the start times of all events.
+The included `Makefile` will build the python environment and run the `little_hope.py` script. This script retrieves one year of streamflow data for Little Hope Creak and caches it in a local sqlite database. The script cleans and resamples the data before applying event detection. This workflow applies event detection using time series decomposition as found in the [Evaluation Tools](https://github.com/NOAA-OWP/evaluation_tools) package. For each event, the script computes peak discharge. The final output are two PNG files: a histogram of peak discharges and a streamflow hydrograph depicting the start times of all events.
 
 To execute the workflow:
 
