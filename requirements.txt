@@ -10,7 +10,7 @@ cycler==0.10.0
 decorator==4.4.2
 defusedxml==0.6.0
 entrypoints==0.3
-evaluation-tools.events @ git+https://github.com/jarq6c/evaluation_tools.git@shift_starts#subdirectory=python/events
+evaluation-tools.events @ git+https://github.com/NOAA-OWP/evaluation_tools.git#subdirectory=python/events
 evaluation-tools.nwis-client @ git+https://github.com/NOAA-OWP/evaluation_tools.git#subdirectory=python/nwis_client
 idna==2.10
 ipykernel==5.4.3
