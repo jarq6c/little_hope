@@ -22,8 +22,11 @@ $ wget https://github.com/jarq6c/little_hope/archive/main.zip
 $ unzip main.zip
 $ cd little_hope-main
 
-# Run make
+# Run make to execute the entire workflow
 $ make
+
+# Alternatively, you can run the workflow from an annotated Jupyter Notebook
+$ make notebook
 
 # To clean-up and start over
 $ make clean
