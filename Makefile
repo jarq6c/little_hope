@@ -1,13 +1,18 @@
 # Workflow options
 PYENV?=env
 PYTHON=$(PYENV)/bin/python3
+JUPYTER=$(PYENV)/bin/jupyter
 SCRIPT=little_hope.py
+NOTEBOOK=little_hope.ipynb
 OUTPUTS=peak_histogram.png streamflow.png nwisiv_cache.sqlite
 
 .PHONY: clean
 
 run: $(PYENV)/bin/activate
 	$(PYTHON) $(SCRIPT)
+
+notebook: $(PYENV)/bin/activate
+	$(JUPYTER) notebook $(NOTEBOOK)
 
 $(PYENV)/bin/activate: requirements.txt
 	test -d $(PYENV) || python3 -m venv $(PYENV)
