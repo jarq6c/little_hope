@@ -4,21 +4,6 @@ from evaluation_tools.nwis_client.iv import IVDataService
 from evaluation_tools.events.event_detection import decomposition as ev
 import matplotlib.pyplot as plt
 
-import pandas as pd
-def find_local_minimum(origin, radius, timeseries):
-    """Return index of local minimum value within radius of origin.
-
-    """
-    # Define search radius
-    radius = pd.Timedelta(radius)
-
-    # Define window
-    left = origin - radius
-    right = origin + radius
-
-    # Find index of minimum value
-    return timeseries.loc[left:right].idxmin()
-
 # Retrieve streamflow observations for Little Hope Creek
 observations = IVDataService.get(
     sites='02146470', 
@@ -41,13 +26,9 @@ events = ev.list_events(
     observations['value'],
     halflife='6H', 
     window='7D',
-    minimum_event_duration='6H'
+    minimum_event_duration='6H',
     start_radius='6H'
 )
-
-# Adjust starts to local minimum
-events['start'] = events['start'].apply(find_local_minimum, 
-    radius='6H', timeseries=observations['value'])
 
 # Compute peak discharge for each event
 events['peak'] = events.apply(
