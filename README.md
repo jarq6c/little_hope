@@ -61,7 +61,8 @@ events = ev.list_events(
     observations['value'],
     halflife='6H', 
     window='7D',
-    minimum_event_duration='6H'
+    minimum_event_duration='6H',
+    start_radius='6H'
 )
 
 # Compute peak discharge for each event
