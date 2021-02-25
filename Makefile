@@ -14,6 +14,9 @@ run: $(PYENV)/bin/activate
 notebook: $(PYENV)/bin/activate
 	$(JUPYTER) notebook $(NOTEBOOK)
 
+events: $(PYENV)/bin/activate
+	$(JUPYTER) notebook event_detection.ipynb
+
 $(PYENV)/bin/activate: requirements.txt
 	test -d $(PYENV) || python3 -m venv $(PYENV)
 	$(PYTHON) -m pip install -U pip wheel setuptools
