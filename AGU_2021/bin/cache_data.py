@@ -49,6 +49,7 @@ def retrieve_model_data():
 
 def retrieve_observations(sim):
     """Get observations that overlap sim."""
+    print("Retrieving observations...")
     # Check for file
     if Path("obs.h5").exists():
         return pd.read_hdf("obs.h5")
