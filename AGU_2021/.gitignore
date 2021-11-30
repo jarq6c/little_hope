@@ -1,2 +1,7 @@
 # Data
 *.h5
+
+# Environments
+miniconda3/*
+Miniconda3*
+sha256sum.txt
