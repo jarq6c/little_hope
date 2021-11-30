@@ -74,11 +74,13 @@ def retrieve_observations(sim):
 def main():
     # Get model data
     sim = retrieve_model_data()
+    count = sim["value"].count()
+    print(f"Cached {count} simulated values")
 
     # Get observations
     obs = retrieve_observations(sim)
-
-    print(obs)
+    count = obs["value"].count()
+    print(f"Cached {count} observed values")
 
 if __name__ == "__main__":
     main()
