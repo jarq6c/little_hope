@@ -3,3 +3,7 @@ hydrotools.nwis_client
 hydrotools.events
 hydrotools.metrics
 jupyterlab
+dask[complete]
+fastparquet
+matplotlib
+ipympl
