@@ -1,24 +1,25 @@
 #!/usr/bin/env python3
 # Import tools to retrieve data and detect events
-from evaluation_tools.nwis_client.iv import IVDataService
-from evaluation_tools.events.event_detection import decomposition as ev
+from hydrotools.nwis_client.iv import IVDataService
+from hydrotools.events.event_detection import decomposition as ev
 import matplotlib.pyplot as plt
 
 # Retrieve streamflow observations for Little Hope Creek
-observations = IVDataService.get(
+client = IVDataService(value_time_label="value_time")
+observations = client.get(
     sites='02146470', 
     startDT='2019-10-01', 
     endDT='2020-09-30'
     )
 
 # Drop extra columns to be more efficient
-observations = observations[['value_date', 'value']]
+observations = observations[['value_time', 'value']]
 
 # Check for duplicate time series, keep first by default
-observations = observations.drop_duplicates(subset=['value_date'])
+observations = observations.drop_duplicates(subset=['value_time'])
 
 # Resample to hourly, keep first measurement in each 1-hour bin
-observations = observations.set_index('value_date')
+observations = observations.set_index('value_time')
 observations = observations.resample('H').first().ffill()
 
 # Detect events
@@ -42,8 +43,7 @@ plt.xlim(0.0,2000.0)
 plt.xlabel('Peak Discharge (cfs)')
 plt.ylabel('Relative Frequency')
 plt.tight_layout()
-plt.savefig('peak_histogram.png')
-plt.close()
+plt.show()
 
 # Plot the hydrograph
 observations.plot(logy=True, legend=False)
@@ -54,4 +54,4 @@ plt.xlabel('Datetime (UTC)')
 plt.ylabel('Discharge (cfs)')
 plt.legend(['Streamflow','Event Start'])
 plt.tight_layout()
-plt.savefig('streamflow.png')
+plt.show()
