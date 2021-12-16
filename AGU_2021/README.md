@@ -19,3 +19,25 @@ This set of python packages includes efficient algorithms suitable for use in en
 
 <sup><sub>Presented at the AGU Fall Meeting, 13-17, Dec., 2021, New Orleans, LA
 Session H074 - Next generation water resources modeling: innovation at the intersection of domain, computer, and data sciences</sup></sub>
+
+### Viewing and Running the Demo
+
+Example demonstration of using OWPHydroTools can be viewed directly in GitHub by clicking on `demo.ipynb` above. If you would like to run this demonstration locally, you can use the instructions below. These instructions assume a Linux command-line environment with `git`, `make`, and knowledge of Jupyter Notebooks.
+
+```console
+# Clone the repository
+git clone https://github.com/jarq6c/little_hope.git
+
+# Change to AGU_2021 directory
+cd AGU_2021
+
+# Create miniconda python environment
+#  Note: This will retrieve and create a local miniconda environment
+make
+
+# Activate environment
+source miniconda3/bin/activate
+
+# Launch notebook demonstration
+jupyter notebook demo.ipynb
+```
