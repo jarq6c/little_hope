@@ -1,6 +1,6 @@
-# OWPHydroTools Demonstration
-## Python-based Tools for Retrieving and Evaluating National Water Model Streamflow Simulations
-### AGU Fall Meeting 2021 - Poster H450-1343
+# National Water Model Evaluation Demonstration
+## Expanding the Scope of National Water Model Forecast Evaluations by using Open Source Python-based Workflows and Incorporating Social Vulnerability
+### AGU Frontiers in Hydrology Meeting 2022 - Poster 120-023
 
 *Jason A. Regina<sup>1</sup> & Arthur A. Raney<sup>2</sup>*
 
@@ -9,27 +9,21 @@
 <sup>2</sup>Consortium of Universities for the Advancement of Hydrologic Science, Inc., Cambridge, MA, USA (Formerly NOAA Pathways Intern, National Water Center)
 
 #### Abstract
-The OWPHydroTools suite (https://github.com/NOAA-OWP/hydrotools) includes packages used to:
- - Asynchronously retrieve USGS streamflow observations as Pandas DataFrames
- - Efficiently retrieve National Water Model (NWM) streamflow simulations and forecasts from Google Cloud Platform as Pandas DataFrames
- - Generate evaluation metrics such as Nash-Sutcliffe Efficiency and Threat Score
- - Detect hydrological events in long streamflow time series and compute single-event metrics from hydrograph features
+We explore the potential of the National Water Model (NWM) Medium Range Forecast (MRF) and Extended Analysis and Assimilation (EANA) to provide vulnerable communities with useful hydrological information with a focus on regions with sparse streamflow observations. The NWM generates a variety of streamflow forecasts and simulations for over 2.7 million stream reaches across the Conterminous United States (CONUS). The MRF is a 10-day streamflow forecast issued four times a day. The EANA is an observation driven streamflow simulation produced daily. We evaluate the performance of the MRF and EANA during two widespread flooding events with a focus on vulnerable communities as quantified by the Social Vulnerability Index (SVI). SVI is a quantitative metric of a community’s relative vulnerability to natural and human-caused disasters. We demonstrate how an NWM evaluation can include broader societal impacts using the SVI and use the EANA to supplement observations in forecast verification. We apply these methods using the OWPHydroTools suite of Python-based hydrological evaluation tools and the dask Python library for efficient parallel computations.
 
-This set of python packages includes efficient algorithms suitable for use in enterprise evaluation of continental-scale hydrologic and hydraulic model outputs. We showcase the capability of these tools through an example evaluation at Little Hope Creek in Charlotte, North Carolina, USA. We demonstrate the utility of this tool set in an event-based evaluation of the NWM “open loop” simulation at Little Hope Creek that includes peak discharge error, volume error, timing errors, NNSE, and categorical statistics.
-
-<sup><sub>Presented at the AGU Fall Meeting, 13-17, Dec., 2021, New Orleans, LA
-Session H074 - Next generation water resources modeling: innovation at the intersection of domain, computer, and data sciences</sup></sub>
+<sup><sub>AGU Frontiers in Hydrology Meeting, 19-24 June 2022 in San Juan, PR
+Session 142579: Advancing the State-of-the-Science of Water Resources Modeling - Community Development at the Intersection of Domain, Data, and Computer Sciences</sup></sub>
 
 ### Viewing and Running the Demo
 
-Example demonstration of using OWPHydroTools can be viewed directly in GitHub by clicking on `demo.ipynb` above. If you would like to run this demonstration locally, you can use the instructions below. These instructions assume a Linux command-line environment with `git`, `make`, and knowledge of Jupyter Notebooks.
+This demonstration can be viewed directly in GitHub by clicking on `demo.ipynb` above. If you would like to run this demonstration locally, you can use the instructions below. These instructions assume a Linux command-line environment with `git`, `make`, and knowledge of Jupyter Notebooks.
 
 ```console
 # Clone the repository
 git clone https://github.com/jarq6c/little_hope.git
 
 # Change to AGU_2021 directory
-cd AGU_2021
+cd AGU_FIHM_2022
 
 # Create miniconda python environment
 #  Note: This will retrieve and create a local miniconda environment
