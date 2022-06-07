@@ -213,24 +213,17 @@ def main(WORKFLOW_DEFAULTS: WorkflowDefaults):
 
     # Get pairs
     pairs = get_pairs(startDT, endDT, WORKFLOW_DEFAULTS)
-    print(pairs.head())
-    return
 
-    # SVI vs Gages
-    obs = obs.groupby("usgs_site_code").max()
-    site_data = site_data.set_index("site_no")
-    obs["county_fips"] = site_data["county_cd"]
+    # Assess gage counts
+    gages = pairs.drop_duplicates(["usgs_site_code"], keep="first")
+    gages = gages[gages["svi"] >= 0.0]
 
-    print("These sites do not have a county code:")
-    print(obs[obs["county_fips"].isnull()])
-
-    obs = obs.groupby("county_fips").count()
-    svi = svi.set_index("county_fips")
-    obs["svi"] = svi["rank"]
-
-    print(obs["svi"].count())
-    print(svi["rank"].count())
-    plt.plot(obs["svi"], obs["value"], "o")
+    # Plot gaged counties
+    plt.hist(gages["svi"], bins=101)
+    plt.xlim(0.0, 1.0)
+    plt.xlabel("National SVI Rank")
+    plt.ylabel("Number NWM Assimilation Gages")
+    plt.tight_layout()
     plt.show()
 
 if __name__ == "__main__":
