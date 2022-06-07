@@ -1,5 +1,6 @@
 # Data
 *.h5
+*.geojson
 
 # Environments
 miniconda3/*
