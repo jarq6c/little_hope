@@ -1,3 +1,4 @@
+from cProfile import label
 from hydrotools.nwm_client.gcp import NWMDataService
 from hydrotools.nwis_client.iv import IVDataService
 from hydrotools.metrics import metrics
@@ -253,7 +254,7 @@ def get_pairs(startDT, endDT, WORKFLOW_DEFAULTS):
             format="table",
             complevel=1
         )
-        
+
         return pairs
 
 def make_hist(arr, xlabel, ylabel, ofile):
@@ -283,10 +284,6 @@ def main(WORKFLOW_DEFAULTS: WorkflowDefaults):
 
     # Get pairs
     pairs = get_pairs(startDT, endDT, WORKFLOW_DEFAULTS)
-
-    annual_peaks = get_annual_peaks(pairs["usgs_site_code"].astype(str).unique(), WORKFLOW_DEFAULTS.store_path)
-    print(annual_peaks.groupby("site_no").quantile(0.33))
-    return
 
     # Assess gage counts
     gages = pairs.drop_duplicates(["usgs_site_code"], keep="first")
@@ -322,6 +319,28 @@ def main(WORKFLOW_DEFAULTS: WorkflowDefaults):
         ylabel="Number of Counties w/o NWM Assimilation Gage",
         ofile="plots/svi_nwm_counties.png"
     )
+
+    # Use the 33.3th percentile of annual peak as a threshold for a categorical evaluation
+    annual_peaks = get_annual_peaks(pairs["usgs_site_code"].astype(str).unique(), WORKFLOW_DEFAULTS.store_path)
+    thresholds = annual_peaks.groupby("site_no").quantile(0.333)
+
+    # Map thresholds
+    pairs["threshold"] = pairs["usgs_site_code"].map(thresholds["peak_va"])
+
+    # Apply thresholds
+    pairs["obs_flood"] = (pairs["obs"] >= pairs["threshold"])
+    pairs["sim_flood"] = (pairs["sim"] >= pairs["threshold"])
+
+    # Compute contingency tables
+    #  Note the use of "observed" to avoid empty categories
+    ct = pairs.groupby("usgs_site_code", observed=True).apply(lambda c: metrics.compute_contingency_table(c.obs_flood, c.sim_flood))
+
+    # Compute some basic metrics
+    ct["POD"] = ct.apply(metrics.probability_of_detection, axis=1)
+    ct["POFA"] = ct.apply(metrics.probability_of_false_alarm, axis=1)
+    ct["TS"] = ct.apply(metrics.threat_score, axis=1)
+
+    print(ct.dropna())
 
 if __name__ == "__main__":
     WORKFLOW_DEFAULTS = WorkflowDefaults()
