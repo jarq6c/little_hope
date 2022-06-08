@@ -10,6 +10,8 @@ from dataclasses import dataclass
 from pathlib import Path
 import geopandas as gpd
 
+plt.style.use('tableau-colorblind10')
+
 @dataclass
 class WorkflowDefaults:
     store_path: str = "local_data.h5"
@@ -225,6 +227,26 @@ def get_pairs(startDT, endDT, WORKFLOW_DEFAULTS):
         
         return pairs
 
+def make_hist(arr, xlabel, ylabel, ofile):
+    # Set font size
+    plt.rc('font', size=8)
+
+    # Get figure and axes
+    fig, ax = plt.subplots(figsize=(6.4, 3.6), dpi=300)
+
+    # Plot histogram
+    ax.hist(arr, bins=21, edgecolor="black")
+    ax.set_xlim(0.0, 1.0)
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(ylabel)
+    fig.tight_layout()
+
+    # Save
+    plt.savefig(ofile)
+
+    # Close
+    plt.close(fig)
+
 def main(WORKFLOW_DEFAULTS: WorkflowDefaults):
     # Evaluation parameters
     startDT = "2021-08-26"
@@ -238,13 +260,12 @@ def main(WORKFLOW_DEFAULTS: WorkflowDefaults):
     gages = gages[gages["svi"] >= 0.0]
 
     # Plot SVI of NWM Assimilation Gages
-    plt.hist(gages["svi"], bins=21)
-    plt.xlim(0.0, 1.0)
-    plt.xlabel("National SVI Rank")
-    plt.ylabel("Number of NWM Assimilation Gages")
-    plt.tight_layout()
-    plt.show()
-    plt.close()
+    make_hist(
+        arr=gages["svi"],
+        xlabel="National SVI Rank",
+        ylabel="Number of NWM Assimilation Gages",
+        ofile="plots/svi_nwm_gages.png"
+    )
 
     # Get site information
     site_data = get_site_data(
@@ -261,14 +282,13 @@ def main(WORKFLOW_DEFAULTS: WorkflowDefaults):
     svi = svi[~mask]
     svi = svi[svi["rank"] >= 0.0]
 
-    # Plot SVI of NWM Assimilation Gages
-    plt.hist(svi["rank"], bins=21)
-    plt.xlim(0.0, 1.0)
-    plt.xlabel("National SVI Rank")
-    plt.ylabel("Number of Counties w/o NWM Assimilation Gage")
-    plt.tight_layout()
-    plt.show()
-    plt.close()
+    # Plot counties with no NWM gages
+    make_hist(
+        arr=svi["rank"],
+        xlabel="National SVI Rank",
+        ylabel="Number of Counties w/o NWM Assimilation Gage",
+        ofile="plots/svi_nwm_counties.png"
+    )
 
 if __name__ == "__main__":
     WORKFLOW_DEFAULTS = WorkflowDefaults()
