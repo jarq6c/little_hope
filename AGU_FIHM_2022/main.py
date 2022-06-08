@@ -124,32 +124,50 @@ def get_obs(sites, startDT, endDT, store_path):
     df = df.drop_duplicates(["usgs_site_code", "value_time"], keep="first")
     return df.groupby(["usgs_site_code", pd.Grouper(key="value_time", freq="1H")]).first()
 
-def get_svi(stateCds):
-    # Retrieve data
-    gdfs = []
-    for s in stateCds:
-        ofile = Path(f"gis/svi_data_{s}.geojson")
-        print(ofile)
-        if ofile.exists():
-            gdfs.append(gpd.read_file(ofile))
+def get_svi(stateCds, store_path):
+    # Check store
+    key = "svi"
+    with pd.HDFStore(store_path) as store:
+        # Retrieve data
+        if key in store:
+            all_data = store[key]
         else:
-            client = SVIClient()
-            gdf = client.get(
-                location=s,
-                geographic_scale="county",
-                year="2018",
-                geographic_context="national"
-                )
+            # Retrieve data
+            gdfs = []
+            for s in stateCds:
+                ofile = Path(f"gis/svi_data_{s}.geojson")
+                print(ofile)
+                if ofile.exists():
+                    gdfs.append(gpd.read_file(ofile))
+                else:
+                    client = SVIClient()
+                    gdf = client.get(
+                        location=s,
+                        geographic_scale="county",
+                        year="2018",
+                        geographic_context="national"
+                        )
 
-            # Cannot store categories in GeoJSON format
-            cats = gdf.select_dtypes("category")
-            for col in cats:
-                gdf[col] = gdf[col].astype(str)
-            gdf.to_file(ofile, driver="GeoJSON")
-            gdfs.append(gdf)
-    
-    # Clean-up data
-    all_data = pd.concat(gdfs, ignore_index=True)
+                    # Cannot store categories in GeoJSON format
+                    cats = gdf.select_dtypes("category")
+                    for col in cats:
+                        gdf[col] = gdf[col].astype(str)
+                    gdf.to_file(ofile, driver="GeoJSON")
+                    gdfs.append(gdf)
+            
+            # Merge data data
+            all_data = pd.concat(gdfs, ignore_index=True)
+            all_data = pd.DataFrame(all_data.drop("geometry", axis=1))
+
+            # Save
+            store.put(
+                value=all_data,
+                key=key,
+                format="table",
+                complevel=1
+            )
+
+    # Clean-up
     all_data = all_data[all_data["theme"] == "svi"]
     return pd.DataFrame(all_data[["fips", "rank", "value"]]).set_index("fips")
 
@@ -185,7 +203,8 @@ def get_pairs(startDT, endDT, WORKFLOW_DEFAULTS):
         )
 
         # Retrieve SVI data
-        svi = get_svi(stateCds=site_data.dropna()["state_ab"].unique())
+        svi = get_svi(stateCds=site_data.dropna()["state_ab"].unique(), 
+            store_path=WORKFLOW_DEFAULTS.store_path)
 
         # Pair data
         pairs = sim.set_index(["usgs_site_code", "value_time"])
@@ -218,13 +237,38 @@ def main(WORKFLOW_DEFAULTS: WorkflowDefaults):
     gages = pairs.drop_duplicates(["usgs_site_code"], keep="first")
     gages = gages[gages["svi"] >= 0.0]
 
-    # Plot gaged counties
-    plt.hist(gages["svi"], bins=101)
+    # Plot SVI of NWM Assimilation Gages
+    plt.hist(gages["svi"], bins=21)
     plt.xlim(0.0, 1.0)
     plt.xlabel("National SVI Rank")
-    plt.ylabel("Number NWM Assimilation Gages")
+    plt.ylabel("Number of NWM Assimilation Gages")
     plt.tight_layout()
     plt.show()
+    plt.close()
+
+    # Get site information
+    site_data = get_site_data(
+        sites=pairs["usgs_site_code"],
+        store_path=WORKFLOW_DEFAULTS.store_path
+    )
+
+    # Retrieve SVI data
+    svi = get_svi(stateCds=site_data.dropna()["state_ab"].unique(), 
+        store_path=WORKFLOW_DEFAULTS.store_path).reset_index()
+
+    # Find ungaged counties
+    mask = svi["fips"].isin(pairs["fips"])
+    svi = svi[~mask]
+    svi = svi[svi["rank"] >= 0.0]
+
+    # Plot SVI of NWM Assimilation Gages
+    plt.hist(svi["rank"], bins=21)
+    plt.xlim(0.0, 1.0)
+    plt.xlabel("National SVI Rank")
+    plt.ylabel("Number of Counties w/o NWM Assimilation Gage")
+    plt.tight_layout()
+    plt.show()
+    plt.close()
 
 if __name__ == "__main__":
     WORKFLOW_DEFAULTS = WorkflowDefaults()
