@@ -3,6 +3,7 @@ from hydrotools.nwis_client.iv import IVDataService
 from hydrotools.metrics import metrics
 from hydrotools.svi_client import SVIClient
 from utilities.SiteService import SiteService
+from utilities.AnnualPeakService import AnnualPeakService
 
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -98,6 +99,34 @@ def get_site_data(sites, store_path):
 
     # Clean-up data
     return df[["site_no", "fips", "state_ab"]].set_index("site_no")
+
+def get_annual_peaks(sites, store_path):
+    with pd.HDFStore(store_path) as store:
+        # Set key
+        key = "annual_peaks"
+
+        # Retrieve data
+        if key in store:
+            df = store[key]
+        else:
+            # Start client
+            client = AnnualPeakService()
+
+            # Retrieve data
+            df = client.get(sites)
+
+            # Save
+            store.put(
+                value=df,
+                key=key,
+                format="table",
+                complevel=1
+            )
+
+    # Clean-up data
+    df.loc[:, "peak_va"] = df["peak_va"].apply(float)
+    df.loc[:, "peak_dt"] = pd.to_datetime(df["peak_dt"], errors="coerce")
+    return df[["site_no", "peak_dt", "peak_va"]].dropna()
 
 def get_obs(sites, startDT, endDT, store_path):
     with pd.HDFStore(store_path) as store:
@@ -254,6 +283,10 @@ def main(WORKFLOW_DEFAULTS: WorkflowDefaults):
 
     # Get pairs
     pairs = get_pairs(startDT, endDT, WORKFLOW_DEFAULTS)
+
+    annual_peaks = get_annual_peaks(pairs["usgs_site_code"].astype(str).unique(), WORKFLOW_DEFAULTS.store_path)
+    print(annual_peaks.groupby("site_no").quantile(0.33))
+    return
 
     # Assess gage counts
     gages = pairs.drop_duplicates(["usgs_site_code"], keep="first")
