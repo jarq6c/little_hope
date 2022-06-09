@@ -6,3 +6,6 @@
 miniconda3/*
 Miniconda3*
 sha256sum.txt
+env/*
+venv/*
+dask-worker-space/*

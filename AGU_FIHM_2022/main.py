@@ -11,6 +11,8 @@ import matplotlib.pyplot as plt
 from dataclasses import dataclass
 from pathlib import Path
 import geopandas as gpd
+import dask.dataframe as dd
+from dask.distributed import Client
 
 plt.style.use('tableau-colorblind10')
 
@@ -331,9 +333,22 @@ def main(WORKFLOW_DEFAULTS: WorkflowDefaults):
     pairs["obs_flood"] = (pairs["obs"] >= pairs["threshold"])
     pairs["sim_flood"] = (pairs["sim"] >= pairs["threshold"])
 
+    # Convert categories to string
+    pairs.loc[:, "usgs_site_code"] = pairs["usgs_site_code"].astype(str)
+
+    # Setup default dask client
+    dask_client = Client(n_workers=4, threads_per_worker=1)
+
     # Compute contingency tables
-    #  Note the use of "observed" to avoid empty categories
-    ct = pairs.groupby("usgs_site_code", observed=True).apply(lambda c: metrics.compute_contingency_table(c.obs_flood, c.sim_flood))
+    meta = {
+        "true_positive": "int64",
+        "false_positive": "int64",
+        "false_negative": "int64",
+        "true_negative": "int64"
+    }
+    dask_pairs = dd.from_pandas(pairs[["usgs_site_code", "obs_flood", "sim_flood"]], npartitions=4).persist()
+    ct = dask_pairs.groupby("usgs_site_code").apply(lambda c: metrics.compute_contingency_table(c.obs_flood, c.sim_flood), 
+        meta=meta).compute()
 
     # Compute some basic metrics
     ct["POD"] = ct.apply(metrics.probability_of_detection, axis=1)
