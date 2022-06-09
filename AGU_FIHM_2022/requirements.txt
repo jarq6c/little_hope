@@ -1,7 +1,7 @@
 hydrotools.nwm_client[gcp]
 hydrotools.nwis_client
-hydrotools.events
 hydrotools.metrics
+hydrotools.svi_client
 jupyterlab
 dask[complete]
 fastparquet
