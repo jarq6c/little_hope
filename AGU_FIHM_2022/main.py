@@ -279,81 +279,103 @@ def make_hist(arr, xlabel, ylabel, ofile):
     # Close
     plt.close(fig)
 
+def evaluate(startDT, endDT, WORKFLOW_DEFAULTS):
+    with pd.HDFStore(WORKFLOW_DEFAULTS.store_path) as store:
+        # Set key
+        key = "evaluation"
+
+        # Check store
+        if key in store:
+            return store[key]
+
+        # Get pairs
+        pairs = get_pairs(startDT, endDT, WORKFLOW_DEFAULTS)
+
+        # Assess gage counts
+        gages = pairs.drop_duplicates(["usgs_site_code"], keep="first")
+        gages = gages[gages["svi"] >= 0.0]
+
+        # Plot SVI of NWM Assimilation Gages
+        make_hist(
+            arr=gages["svi"],
+            xlabel="National SVI Rank",
+            ylabel="Number of NWM Assimilation Gages",
+            ofile="plots/svi_nwm_gages.png"
+        )
+
+        # Get site information
+        site_data = get_site_data(
+            sites=pairs["usgs_site_code"],
+            store_path=WORKFLOW_DEFAULTS.store_path
+        )
+
+        # Retrieve SVI data
+        svi = get_svi(stateCds=site_data.dropna()["state_ab"].unique(), 
+            store_path=WORKFLOW_DEFAULTS.store_path).reset_index()
+
+        # Find ungaged counties
+        mask = svi["fips"].isin(pairs["fips"])
+        svi = svi[~mask]
+        svi = svi[svi["rank"] >= 0.0]
+
+        # Plot counties with no NWM gages
+        make_hist(
+            arr=svi["rank"],
+            xlabel="National SVI Rank",
+            ylabel="Number of Counties w/o NWM Assimilation Gage",
+            ofile="plots/svi_nwm_counties.png"
+        )
+
+        # Use the 33.3th percentile of annual peak as a threshold for a categorical evaluation
+        annual_peaks = get_annual_peaks(pairs["usgs_site_code"].astype(str).unique(), WORKFLOW_DEFAULTS.store_path)
+        thresholds = annual_peaks.groupby("site_no").quantile(0.333)
+
+        # Map thresholds
+        pairs["threshold"] = pairs["usgs_site_code"].map(thresholds["peak_va"])
+
+        # Apply thresholds
+        pairs["obs_flood"] = (pairs["obs"] >= pairs["threshold"])
+        pairs["sim_flood"] = (pairs["sim"] >= pairs["threshold"])
+
+        # Convert categories to string
+        pairs.loc[:, "usgs_site_code"] = pairs["usgs_site_code"].astype(str)
+
+        # Setup default dask client
+        dask_client = Client(n_workers=4, threads_per_worker=1)
+
+        # Compute contingency tables
+        meta = {
+            "true_positive": "int64",
+            "false_positive": "int64",
+            "false_negative": "int64",
+            "true_negative": "int64"
+        }
+        dask_pairs = dd.from_pandas(pairs[["usgs_site_code", "obs_flood", "sim_flood"]], npartitions=4).persist()
+        ct = dask_pairs.groupby("usgs_site_code").apply(lambda c: metrics.compute_contingency_table(c.obs_flood, c.sim_flood), 
+            meta=meta).compute()
+
+        # Compute some basic metrics
+        ct["POD"] = ct.apply(metrics.probability_of_detection, axis=1)
+        ct["POFA"] = ct.apply(metrics.probability_of_false_alarm, axis=1)
+        ct["TS"] = ct.apply(metrics.threat_score, axis=1)
+
+        # Save
+        store.put(
+            value=ct,
+            key=key,
+            format="table",
+            complevel=1
+        )
+
+        return ct
+
 def main(WORKFLOW_DEFAULTS: WorkflowDefaults):
     # Evaluation parameters
     startDT = "2021-08-26"
     endDT = "2021-09-06"
 
     # Get pairs
-    pairs = get_pairs(startDT, endDT, WORKFLOW_DEFAULTS)
-
-    # Assess gage counts
-    gages = pairs.drop_duplicates(["usgs_site_code"], keep="first")
-    gages = gages[gages["svi"] >= 0.0]
-
-    # Plot SVI of NWM Assimilation Gages
-    make_hist(
-        arr=gages["svi"],
-        xlabel="National SVI Rank",
-        ylabel="Number of NWM Assimilation Gages",
-        ofile="plots/svi_nwm_gages.png"
-    )
-
-    # Get site information
-    site_data = get_site_data(
-        sites=pairs["usgs_site_code"],
-        store_path=WORKFLOW_DEFAULTS.store_path
-    )
-
-    # Retrieve SVI data
-    svi = get_svi(stateCds=site_data.dropna()["state_ab"].unique(), 
-        store_path=WORKFLOW_DEFAULTS.store_path).reset_index()
-
-    # Find ungaged counties
-    mask = svi["fips"].isin(pairs["fips"])
-    svi = svi[~mask]
-    svi = svi[svi["rank"] >= 0.0]
-
-    # Plot counties with no NWM gages
-    make_hist(
-        arr=svi["rank"],
-        xlabel="National SVI Rank",
-        ylabel="Number of Counties w/o NWM Assimilation Gage",
-        ofile="plots/svi_nwm_counties.png"
-    )
-
-    # Use the 33.3th percentile of annual peak as a threshold for a categorical evaluation
-    annual_peaks = get_annual_peaks(pairs["usgs_site_code"].astype(str).unique(), WORKFLOW_DEFAULTS.store_path)
-    thresholds = annual_peaks.groupby("site_no").quantile(0.333)
-
-    # Map thresholds
-    pairs["threshold"] = pairs["usgs_site_code"].map(thresholds["peak_va"])
-
-    # Apply thresholds
-    pairs["obs_flood"] = (pairs["obs"] >= pairs["threshold"])
-    pairs["sim_flood"] = (pairs["sim"] >= pairs["threshold"])
-
-    # Convert categories to string
-    pairs.loc[:, "usgs_site_code"] = pairs["usgs_site_code"].astype(str)
-
-    # Setup default dask client
-    dask_client = Client(n_workers=4, threads_per_worker=1)
-
-    # Compute contingency tables
-    meta = {
-        "true_positive": "int64",
-        "false_positive": "int64",
-        "false_negative": "int64",
-        "true_negative": "int64"
-    }
-    dask_pairs = dd.from_pandas(pairs[["usgs_site_code", "obs_flood", "sim_flood"]], npartitions=4).persist()
-    ct = dask_pairs.groupby("usgs_site_code").apply(lambda c: metrics.compute_contingency_table(c.obs_flood, c.sim_flood), 
-        meta=meta).compute()
-
-    # Compute some basic metrics
-    ct["POD"] = ct.apply(metrics.probability_of_detection, axis=1)
-    ct["POFA"] = ct.apply(metrics.probability_of_false_alarm, axis=1)
-    ct["TS"] = ct.apply(metrics.threat_score, axis=1)
+    ct = evaluate(startDT, endDT, WORKFLOW_DEFAULTS)
 
     print(ct.dropna())
 
