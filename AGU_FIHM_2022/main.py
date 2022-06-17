@@ -279,6 +279,25 @@ def make_hist(arr, xlabel, ylabel, ofile):
     # Close
     plt.close(fig)
 
+def make_xy(x, y, xlabel, ylabel, ofile):
+    # Set font size
+    plt.rc('font', size=8)
+
+    # Get figure and axes
+    fig, ax = plt.subplots(figsize=(6.4, 3.6), dpi=300)
+
+    # Plot x vs. y
+    ax.plot(x, y, "o")
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(ylabel)
+    fig.tight_layout()
+
+    # Save
+    plt.savefig(ofile)
+
+    # Close
+    plt.close(fig)
+
 def evaluate(startDT, endDT, WORKFLOW_DEFAULTS):
     with pd.HDFStore(WORKFLOW_DEFAULTS.store_path) as store:
         # Set key
@@ -374,10 +393,25 @@ def main(WORKFLOW_DEFAULTS: WorkflowDefaults):
     startDT = "2021-08-26"
     endDT = "2021-09-06"
 
-    # Get pairs
+    # Get evaluation results
     ct = evaluate(startDT, endDT, WORKFLOW_DEFAULTS)
 
-    print(ct.dropna())
+    # Get pairs
+    pairs = get_pairs(startDT, endDT, WORKFLOW_DEFAULTS)
+
+    # Map svi to evaluation results
+    svi = pairs.drop_duplicates(["usgs_site_code"], keep="first").set_index("usgs_site_code")
+    ct["svi"] = svi["svi"]
+    ct["fips"] = svi["fips"]
+
+    # Plot evaluation results vs svi
+    ct = ct.dropna()
+    ct = ct.groupby("fips").mean()
+    make_xy(ct["svi"], ct["TS"], 
+        "National Ranked SVI",
+        "Critical Success Index by US County",
+        "plots/eval_results_sim.png"
+        )
 
 if __name__ == "__main__":
     WORKFLOW_DEFAULTS = WorkflowDefaults()
