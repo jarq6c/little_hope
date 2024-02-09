@@ -109,6 +109,9 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+Miniconda*
+miniconda3/
+sha256sum.txt
 
 # Spyder project settings
 .spyderproject
@@ -131,3 +134,4 @@ dmypy.json
 # Data
 *.sqlite
 *.png
+*.csv
