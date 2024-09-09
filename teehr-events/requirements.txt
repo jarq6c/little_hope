@@ -1,0 +1,4 @@
+teehr==0.3.28
+pyarrow>=17.0
+dask[distributed]
+dask[dataframe]
