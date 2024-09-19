@@ -10,6 +10,7 @@ def plot_points(
         yerr: npt.ArrayLike,
         xtick_labels: npt.ArrayLike,
         yticks: npt.ArrayLike,
+        xlim: tuple[float, float],
         ylabel: str,
         title: str
 ) -> mpl.axes.Axes:
@@ -21,7 +22,7 @@ def plot_points(
         fmt=".",
         capsize=2.0,
         )
-    ax.set_xlim(min(x)-0.5, max(x)+0.5)
+    ax.set_xlim(xlim)
     ax.set_ylim(-0.1, 1.1)
     ax.set_xticks(x, labels=xtick_labels)
     ax.set_yticks(yticks)
@@ -40,6 +41,7 @@ def main():
         yerr=[0.0, 0.0],
         xtick_labels=["Model A", "Model B"],
         yticks=[0.0, 0.2, 0.4, 0.6, 0.8, 1.0],
+        xlim=(-0.5, 2.5),
         ylabel="Nash-Sutcliffe Model Efficiency",
         title="Which model is better?"
     )
@@ -56,9 +58,11 @@ def main():
         yerr=[0.2, 0.3],
         xtick_labels=["Model A", "Model B"],
         yticks=[0.0, 0.2, 0.4, 0.6, 0.8, 1.0],
+        xlim=(-0.5, 2.5),
         ylabel="Nash-Sutcliffe Model Efficiency",
         title="Which model is better?"
     )
+    ax.text(2.45, -0.05, "(95% Confidence)", ha="right")
     fig.tight_layout()
     plt.savefig("figures/nse_02.png")
     plt.close()
@@ -72,11 +76,13 @@ def main():
         yerr=[0.2, 0.3, 0.1],
         xtick_labels=["Model A", "Model B", "Baseline"],
         yticks=[0.0, 0.2, 0.4, 0.6, 0.8, 1.0],
+        xlim=(-0.5, 2.5),
         ylabel="Nash-Sutcliffe Model Efficiency",
         title="Which model is better?"
     )
+    ax.text(2.45, -0.05, "(95% Confidence)", ha="right")
     fig.tight_layout()
-    plt.savefig("figures/nse_05.png")
+    plt.savefig("figures/nse_03.png")
     plt.close()
 
 if __name__ == "__main__":
